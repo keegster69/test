@@ -98,13 +98,15 @@ app.post("/login", async (req, res) => {
 
     console.log("Fetching user profile for:", email);
     const { data: profileData, error: profileError } = await supabase
-      .schema('api')
-      .from("profiles")
-      .select("id, name, email, password")
-      console.log("User found ✓");
-      console.log("DEBUG - Profile data returned:", JSON.stringify(profileData));
-      console.log("DEBUG - Password field:", profileData?.password);
-      console.log("DEBUG - Password exists?:", !!profileData?.password);
+        .schema('api')
+        .from("profiles")
+        .select("id, name, email, password")
+        .eq("email", email)
+        .single();
+
+      console.log("Profile data returned:", profileData);
+      console.log("Password field:", profileData?.password);
+      console.log("Password type:", typeof profileData?.password);
     if (profileError || !profileData) {
       console.log("❌ User not found:", profileError);
       return res.status(401).json({ message: "Invalid email or password" });
@@ -245,6 +247,7 @@ app.listen(PORT, () => {
   console.log("\n🚀 Server running on port", PORT);
   console.log("Debug mode enabled - all requests will be logged\n");
 });
+
 
 
 
