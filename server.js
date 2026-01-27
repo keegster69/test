@@ -101,7 +101,10 @@ app.post("/login", async (req, res) => {
       .schema('api')
       .from("profiles")
       .select("id, name, email, password")
-
+      console.log("User found ✓");
+      console.log("DEBUG - Profile data returned:", JSON.stringify(profileData));
+      console.log("DEBUG - Password field:", profileData?.password);
+      console.log("DEBUG - Password exists?:", !!profileData?.password);
     if (profileError || !profileData) {
       console.log("❌ User not found:", profileError);
       return res.status(401).json({ message: "Invalid email or password" });
@@ -242,6 +245,7 @@ app.listen(PORT, () => {
   console.log("\n🚀 Server running on port", PORT);
   console.log("Debug mode enabled - all requests will be logged\n");
 });
+
 
 
 
