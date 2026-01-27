@@ -53,12 +53,15 @@ app.post("/signup", async (req, res) => {
     console.log("User created in Auth ✓ User ID:", authData.user.id);
 
     console.log("Inserting into profiles table...");
-    const { error: profileError } = await supabase.from("profiles").insert({
+    const { error: profileError } = await supabase
+    .schema('public')
+    .from("profiles")
+    .insert({
       id: authData.user.id,
       name,
       email,
       password: hashedPassword
-    });
+  });
 
     if (profileError) {
       console.error("❌ Profile creation error:", profileError);
@@ -95,10 +98,9 @@ app.post("/login", async (req, res) => {
 
     console.log("Fetching user profile for:", email);
     const { data: profileData, error: profileError } = await supabase
+      .schema('public')
       .from("profiles")
       .select("id, name, email, password")
-      .eq("email", email)
-      .single();
 
     if (profileError || !profileData) {
       console.log("❌ User not found:", profileError);
@@ -237,3 +239,4 @@ app.listen(PORT, () => {
   console.log("\n🚀 Server running on port", PORT);
   console.log("Debug mode enabled - all requests will be logged\n");
 });
+
