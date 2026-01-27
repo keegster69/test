@@ -152,7 +152,7 @@ app.post("/wagers", async (req, res) => {
         user_id: userId,
         group_name: groupName,
         description,
-        amount: parseFloat(amount),
+        amount: amount,
         start_date: startDate,
         end_date: endDate,
         payout
@@ -242,5 +242,6 @@ app.listen(PORT, () => {
   console.log("\n🚀 Server running on port", PORT);
   console.log("Debug mode enabled - all requests will be logged\n");
 });
+
 
 
