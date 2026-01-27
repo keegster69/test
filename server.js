@@ -54,7 +54,7 @@ app.post("/signup", async (req, res) => {
 
     console.log("Inserting into profiles table...");
     const { error: profileError } = await supabase
-    .schema('public')
+    .schema('api')
     .from("profiles")
     .insert({
       id: authData.user.id,
@@ -98,7 +98,7 @@ app.post("/login", async (req, res) => {
 
     console.log("Fetching user profile for:", email);
     const { data: profileData, error: profileError } = await supabase
-      .schema('public')
+      .schema('api')
       .from("profiles")
       .select("id, name, email, password")
 
@@ -146,6 +146,7 @@ app.post("/wagers", async (req, res) => {
 
     console.log("Inserting wager...");
     const { data: wagerData, error: wagerError } = await supabase
+      .schema('api')
       .from("wagers")
       .insert([{
         user_id: userId,
@@ -173,6 +174,7 @@ app.post("/wagers", async (req, res) => {
     }));
     
     const { error: memberError } = await supabase
+      .schema('api')
       .from("wager_members")
       .insert(memberRows);
 
@@ -199,6 +201,7 @@ app.get("/wagers/:userId", async (req, res) => {
     const { userId } = req.params;
 
     const { data, error } = await supabase
+      .schema('api')
       .from("wagers")
       .select(`
         id,
@@ -239,4 +242,5 @@ app.listen(PORT, () => {
   console.log("\n🚀 Server running on port", PORT);
   console.log("Debug mode enabled - all requests will be logged\n");
 });
+
 
