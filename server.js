@@ -5,7 +5,12 @@ const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcrypt");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allows all origins - or specify your Cloudflare Pages URL
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // ------------------ SUPABASE SETUP ------------------
@@ -247,6 +252,7 @@ app.listen(PORT, () => {
   console.log("\n🚀 Server running on port", PORT);
   console.log("Debug mode enabled - all requests will be logged\n");
 });
+
 
 
 
