@@ -216,7 +216,7 @@ app.get("/wagers/:userId", async (req, res) => {
         start_date,
         end_date,
         payout,
-        wager_members(email)
+        wager_members(email, status)
       `)
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
