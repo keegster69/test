@@ -5,12 +5,7 @@ const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcrypt");
 
 const app = express();
-app.use(cors({
-  origin: '*', // Allows all origins - or specify your Cloudflare Pages URL
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json());
 
 // ------------------ SUPABASE SETUP ------------------
@@ -252,9 +247,132 @@ app.listen(PORT, () => {
   console.log("\n🚀 Server running on port", PORT);
   console.log("Debug mode enabled - all requests will be logged\n");
 });
+// ------------------ GET WAGER REQUESTS ------------------
+app.get("/wager-requests/:userEmail", async (req, res) => {
+  console.log("\n=== GET WAGER REQUESTS ===");
+  console.log("User Email:", req.params.userEmail);
+  
+  try {
+    const { userEmail } = req.params;
+
+    const { data: memberData, error: memberError } = await supabase
+      .schema('api')
+      .from("wager_members")
+      .select("wager_id")
+      .eq("email", userEmail)
+      .eq("status", "pending"); // Only show pending requests
+    
+    if (memberError) {
+      console.error("❌ Error fetching member data:", memberError);
+      return res.status(500).json([]);
+    }
+
+    if (!memberData || memberData.length === 0) {
+      console.log("No wager requests found");
+      return res.json([]);
+    }
+
+    // Get the wager IDs
+    const wagerIds = memberData.map(m => m.wager_id);
+
+    // Fetch the full wager details
+    const { data: wagers, error: wagersError } = await supabase
+      .schema('api')
+      .from("wagers")
+      .select(`
+        id,
+        group_name,
+        description,
+        amount,
+        start_date,
+        end_date,
+        payout,
+        user_id
+      `)
+      .in("id", wagerIds);
+
+    if (wagersError) {
+      console.error("❌ Error fetching wagers:", wagersError);
+      return res.status(500).json([]);
+    }
+
+    console.log("✅ Found", wagers.length, "wager requests");
+    res.json(wagers || []);
+
+  } catch (err) {
+    console.error("❌ Server error loading wager requests:", err);
+    res.status(500).json([]);
+  }
+});
+// ------------------ ACCEPT WAGER ------------------
+app.post("/wagers/:wagerId/accept", async (req, res) => {
+  console.log("\n=== ACCEPT WAGER REQUEST ===");
+  console.log("Wager ID:", req.params.wagerId);
+  console.log("Body:", req.body);
+  
+  try {
+    const { wagerId } = req.params;
+    const { userEmail } = req.body;
+
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: "Email required" });
+    }
+
+    // Update the wager_member status to 'accepted'
+    // First, add a 'status' column to wager_members table if you don't have it
+    const { error } = await supabase
+      .schema('api')
+      .from("wager_members")
+      .update({ status: 'accepted' })
+      .eq("wager_id", wagerId)
+      .eq("email", userEmail);
+
+    if (error) {
+      console.error("❌ Error accepting wager:", error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+
+    console.log("✅ Wager accepted");
+    res.json({ success: true, message: "Wager accepted" });
+
+  } catch (err) {
+    console.error("❌ Server error accepting wager:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ------------------ DECLINE WAGER ------------------
+app.post("/wagers/:wagerId/decline", async (req, res) => {
+  console.log("\n=== DECLINE WAGER REQUEST ===");
+  console.log("Wager ID:", req.params.wagerId);
+  console.log("Body:", req.body);
+  
+  try {
+    const { wagerId } = req.params;
+    const { userEmail } = req.body;
+
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: "Email required" });
+    }
 
 
+    const { error } = await supabase
+        .schema('api')
+        .from("wager_members")
+        .delete()
+        .eq("wager_id", wagerId)
+        .eq("email", userEmail);
 
+    if (error) {
+      console.error("❌ Error declining wager:", error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
 
+    console.log("✅ Wager declined");
+    res.json({ success: true, message: "Wager declined" });
 
-
+  } catch (err) {
+    console.error("❌ Server error declining wager:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
